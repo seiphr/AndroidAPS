@@ -11,10 +11,10 @@
 
     <!-- Version Checker -->
     <string name="version_checker" translatable="false">Version Checker</string>
-    <string name="application_expired">Application expired</string>
+    <string name="application_expired">This app version has expired. maxIOB is limited to 0 U, which can restrict SMBs and automatic basal increases. Update the app to restore normal operation.</string>
     <string name="running_invalid_version">We have detected that you are running an invalid version. Loop disabled!</string>
     <string name="versionavailable">Version %1$s available</string>
-    <string name="version_expire">Version %1$s expire on %2$s and will turn into LGS mode</string>
+    <string name="version_expire" comment="%1$s=app version, %2$s=expiration date. At expiration, maxIOB is limited to zero insulin units.">Version %1$s expires on %2$s. After that, maxIOB will be limited to 0 U, which can restrict SMBs and automatic basal increases. Update the app before this date.</string>
 
     <!-- Signature verifier -->
     <string name="signature_verifier" translatable="false">Signature verifier</string>

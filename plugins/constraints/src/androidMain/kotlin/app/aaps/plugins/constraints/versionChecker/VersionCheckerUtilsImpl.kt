@@ -65,16 +65,16 @@ class VersionCheckerUtilsImpl(
         val newVersionByApi = compareWithCurrentVersion(newVersion = version, currentVersion = config().VERSION_NAME)
 
         // App expiration
+        var endDate = preferences.get(LongComposedKey.AppExpiration, config().VERSION_NAME)
         if (newVersionByApi || config().isDev()) {
-            var endDate = preferences.get(LongComposedKey.AppExpiration, config().VERSION_NAME)
             AllowedVersions.findByVersion(definition, config().VERSION_NAME)?.let { dateAsString ->
                 AllowedVersions.endDateToMilliseconds(dateAsString)?.let { ed ->
                     endDate = ed + T.days(1).msecs()
                     preferences.put(LongComposedKey.AppExpiration, config().VERSION_NAME, value = endDate)
                 }
             }
-            if (endDate != 0L) onExpireDateDetected(config().VERSION_NAME, endDate)
         }
+        if (endDate != 0L) onExpireDateDetected(config().VERSION_NAME, endDate)
 
     }
 
@@ -150,20 +150,18 @@ class VersionCheckerUtilsImpl(
 
     private fun onExpireDateDetected(currentVersion: String, endDate: Long) {
         val now = dateUtil.now()
-        if (dateUtil.now() > endDate && shouldWarnAgain()) {
-            // store last notification time
-            preferences.put(VersionCheckerLongKey.LastVersionCheckWarning, now)
-            //notify
-            notificationManager.post(NotificationId.VERSION_EXPIRE, ConstraintsStrings.application_expired)
-        } else if (dateUtil.isAfterNoon() && now > preferences.get(VersionCheckerLongKey.LastVersionCheckWarning) + warnEvery(endDate)) {
+        val lastWarning = preferences.get(VersionCheckerLongKey.LastExpiredWarning)
+        if (now > endDate) {
+            if (lastWarning <= endDate || now > lastWarning + warnEvery(endDate)) {
+                notificationManager.post(NotificationId.VERSION_EXPIRE, ConstraintsStrings.application_expired)
+                preferences.put(VersionCheckerLongKey.LastExpiredWarning, now)
+            }
+        } else if (dateUtil.isAfterNoon() && now > lastWarning + warnEvery(endDate)) {
             aapsLogger.debug(LTag.CORE, rh.gs(ConstraintsStrings.version_expire, currentVersion, dateUtil.dateString(endDate)))
-            notificationManager.post(NotificationId.VERSION_EXPIRE, ConstraintsStrings.version_expire.withArgs(currentVersion,dateUtil.dateString(endDate)), level = NotificationLevel.LOW)
+            notificationManager.post(NotificationId.VERSION_EXPIRE, ConstraintsStrings.version_expire.withArgs(currentVersion, dateUtil.dateString(endDate)), level = NotificationLevel.LOW)
             preferences.put(VersionCheckerLongKey.LastExpiredWarning, now)
         }
     }
-
-    private fun shouldWarnAgain() =
-        dateUtil.now() > preferences.get(VersionCheckerLongKey.LastVersionCheckWarning) + warnEvery(expiration = preferences.get(LongComposedKey.AppExpiration, config().VERSION_NAME))
 
     private fun String?.toNumberList() =
         this?.numericVersionPart().takeIf { !it.isNullOrBlank() }?.split(".")?.map { it.toInt() }

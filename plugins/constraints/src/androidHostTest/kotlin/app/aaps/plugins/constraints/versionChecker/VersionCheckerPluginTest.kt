@@ -37,5 +37,8 @@ class VersionCheckerPluginTest : TestBaseWithProfile() {
         whenever(preferences.get(LongComposedKey.AppExpiration, config.VERSION_NAME)).thenReturn(now - 1000)
         val c3 = ConstraintObject(Double.MAX_VALUE, aapsLogger)
         assertThat(versionCheckerPlugin.applyMaxIOBConstraints(c3).value()).isEqualTo(0.0)
+        assertThat(c3.getReasons()).contains("This app version has expired.")
+        assertThat(c3.getReasons()).contains("maxIOB is limited to 0 U")
+        assertThat(c3.getReasons()).contains("SMBs and automatic basal increases")
     }
 }
